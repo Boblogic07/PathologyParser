@@ -34,7 +34,7 @@ var desiredResults =
     "A.P.T.T.":0,
     "Fibrinogen":0,
     "Thrombin time":0,
-    "  Lipase  ":0 //extra spaces to make lipase specific to "Lipase as opposed to Lipase test performed on Siemens Advia 1800 analyser"
+    "Lipase  ":0 //extra spaces to make lipase specific to "Lipase as opposed to Lipase test performed on Siemens Advia 1800 analyser"
 
 };
 
@@ -70,7 +70,7 @@ var MinimumValues =
     "A.P.T.T.":25.0,
     "Fibrinogen":2.0,
     "Thrombin time":0,
-    "  Lipase  ":8
+    "Lipase  ":8
 };
 
 var MaximumValues =
@@ -105,7 +105,7 @@ var MaximumValues =
     "A.P.T.T.":35.0,
     "Fibrinogen":4.0,
     "Thrombin time":21.0,
-    "  Lipase  ":57
+    "Lipase  ":57
 };
 
 var rawInput;
@@ -123,10 +123,37 @@ Array.prototype.clean = function(deleteValue) {
 function parseDate(input) {
     var parts = input.split('/');
     // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
-    var testYear = "20" + parts[2];
+    var testYear = parts[2];
+
+    if(parts[2] < 100)
+    {
+        testYear = "20" + parts[2];
+    }
     var testMonth = parts[1]-1; // Note: months are 0-based
     var testDay = parts[0];
     return new Date(testYear, testMonth, testDay);
+}
+
+function parseDatePossible(input) {
+    var parts = input.split('/');
+    // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
+    var testYear = parts[2];
+
+    if(parts[2] < 100)
+    {
+        testYear = "20" + parts[2];
+    }
+    var testMonth = parts[1]-1; // Note: months are 0-based
+    var testDay = parts[0];
+    var newDate =  new Date(testYear, testMonth, testDay);
+    if(newDate.getDate() == 'NaN')
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 function setDateOfTest(input)
@@ -134,13 +161,20 @@ function setDateOfTest(input)
     var localRawLines = input.split(["\n"]);
 
     for(l = 0; l < localRawLines.length; l++) {
-        line = localRawLines[l];
+        if(!dateOfTest) {
+            line = localRawLines[l];
 
-        if (line.indexOf("Date:") > -1) {
-            var possibleDates = line.split(" ", 24);
-            possibleDates = possibleDates.clean("");
-            dateOfTest = parseDate(possibleDates[1]);
+            if (line.indexOf("Date:") > -1) {
+                var possibleDates = line.split(" ", 24);
+                possibleDates = possibleDates.clean("");
+                if (parseDatePossible(possibleDates[1])) {
+                    dateOfTest = parseDate(possibleDates[1]);
+                }
+                if (parseDatePossible(possibleDates[2])) {
+                    dateOfTest = parseDate(possibleDates[2]);
+                }
 
+            }
         }
     }
 
@@ -177,7 +211,7 @@ function loadValueFromTest(input)
         {
             if (line.indexOf(desiredResult) > -1)
             {
-                var rawWords = line.split(" ", 30 - desiredResult.length);
+                var rawWords = line.split(" ", 28 - desiredResult.length);
                 words = rawWords.clean("");
 
                 for (var k = 0; k < words.length; k++)
@@ -229,6 +263,28 @@ function generateOutput()
             "</br>" + "FBE: " + Hb + "/"
                 + Wcc + "/"
                 + Plt;
+    }
+
+    var outputStringAbnormalWCC = "";
+    if(desiredResults["WCC"] > MaximumValues["WCC"] || desiredResults["WCC"] < MinimumValues["WCC"] && desiredResults["WCC"] != 0)
+    {
+        var neut = checkResultNormal("Neutrophils");
+
+        outputStringAbnormalWCC = " Neut: " + neut;
+    }
+
+    var outputStringAbnormalHb = "";
+
+    if(desiredResults["HAEMOGLOBIN"] > MaximumValues["HAEMOGLOBIN"] || desiredResults["HAEMOGLOBIN"] < MinimumValues["HAEMOGLOBIN"] && desiredResults["HAEMOGLOBIN"] != 0)
+    {
+        var rbc = checkResultNormal("RBC");
+        var pcv = checkResultNormal("PCV");
+        var mcv = checkResultNormal("MCV");
+        var mch = checkResultNormal("MCH");
+        var rdw = checkResultNormal("RDW");
+
+        outputStringAbnormalHb = '<br>' + "RBC " + rbc + " PCV " + pcv + " MCV " + mcv + " MCH " + mch + " RDW " + rdw;
+
     }
 
     var outputStringUEC = "";
@@ -304,9 +360,9 @@ function generateOutput()
     }
 
     var outputStringLipase = "";
-    if(desiredResults["  Lipase  "])
+    if(desiredResults["Lipase  "])
     {
-        var Lipase = checkResultNormal("  Lipase  ");
+        var Lipase = checkResultNormal("Lipase  ");
 
         outputStringLipase = '<br>' + "Lipase: " + Lipase;
     }
@@ -314,7 +370,7 @@ function generateOutput()
 
 
 
-    outputTarget.innerHTML = outputStringDate + outputStringFBE + outputStringUEC + outputStringCMP + outputStringLFT + outputStringCRP + outputStringCoags + outputStringLipase;
+    outputTarget.innerHTML = outputStringDate + outputStringFBE + outputStringAbnormalWCC + outputStringAbnormalHb + outputStringUEC + outputStringCMP + outputStringLFT + outputStringCRP + outputStringCoags + outputStringLipase;
 
 }
 
@@ -352,7 +408,7 @@ function generateOutput()
             rawCoags = rawInputTests[h];
             loadValueFromTest(rawCoags);
         }
-        if(rawInputTests[h].indexOf("  Lipase  ")>-1)
+        if(rawInputTests[h].indexOf("Lipase  ")>-1)
         {
             rawLipase = rawInputTests[h];
             loadValueFromTest(rawLipase);
