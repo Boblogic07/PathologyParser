@@ -139,6 +139,7 @@ function parseDatePossible(input) {
     // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
     var testYear = parts[2];
 
+
     if(parts[2] < 100)
     {
         testYear = "20" + parts[2];
@@ -170,7 +171,7 @@ function setDateOfTest(input)
                 if (parseDatePossible(possibleDates[1])) {
                     dateOfTest = parseDate(possibleDates[1]);
                 }
-                if (parseDatePossible(possibleDates[2])) {
+                if (parseDatePossible(possibleDates[2]) && !dateOfTest) {
                     dateOfTest = parseDate(possibleDates[2]);
                 }
 
@@ -209,23 +210,22 @@ function loadValueFromTest(input)
 
         for(desiredResult in desiredResults)
         {
-            if (line.indexOf(desiredResult) > -1)
+            if(!desiredResults[desiredResult])
             {
-                var rawWords = line.split(" ", 28 - desiredResult.length);
-                words = rawWords.clean("");
+                if (line.indexOf(desiredResult) > -1) {
+                    var rawWords = line.split(" ", 28 - desiredResult.length);
+                    words = rawWords.clean("");
 
-                for (var k = 0; k < words.length; k++)
-                {
-                    var result;
+                    for (var k = 0; k < words.length; k++) {
+                        var result;
                         result = parseFloat(words[k]);
-                        if(result)
-                        {
+                        if (result && !desiredResults[desiredResult]) {
                             desiredResults[desiredResult] = result;
                         }
+                    }
+
                 }
-
             }
-
         }
     }
 }
@@ -447,7 +447,13 @@ function reset()
         "GGT":0,
         "AST":0,
         "ALT":0,
-        "CRP":0
+        "CRP":0,
+        "Prothrombin time":0,
+        "INR":0,
+        "A.P.T.T.":0,
+        "Fibrinogen":0,
+        "Thrombin time":0,
+        "Lipase  ":0
     };
     document.getElementById("inputField").value = "";
     document.getElementById("output").innerHTML = "";
