@@ -455,6 +455,7 @@ function reset()
         "Thrombin time":0,
         "Lipase  ":0
     };
+    dateOfTest = null;
     document.getElementById("inputField").value = "";
     document.getElementById("output").innerHTML = "";
 }
